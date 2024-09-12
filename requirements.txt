@@ -1,0 +1,5 @@
+streamlit==1.24.0      # Version may vary, update based on your installation
+pandas==1.5.0          # Or any version you prefer
+openpyxl==3.0.10       # For reading/writing .xlsx files
+xlsxwriter==3.0.9      # For writing .xlsx files (used by Pandas)
+numpy==1.23.3          # For handling numerical operations
