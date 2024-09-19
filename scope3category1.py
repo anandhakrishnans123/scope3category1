@@ -20,7 +20,7 @@ def process_files(client_file, template_path, column_mapping):
     matched_data = pd.DataFrame(columns=template_data.columns)
 
     # Match and transfer data based on the column_mapping dictionary
-    for client_col, template_col in column_mapping.items():
+    for template_col, client_col in column_mapping.items():
         if client_col in client_data.columns and template_col in template_data.columns:
             matched_data[template_col] = client_data[client_col]
 
@@ -46,14 +46,14 @@ template_path = 'Freight-Sample_scope3.xlsx'
 
 # Preset column mapping (you can modify these as the default mappings)
 preset_column_mapping = {
-    'Job Date': 'Res_Date',
-    'Consolidation Type': 'Facility',
-    'POL': 'Departure',
-    'POD': 'Arrival',
-    'ATA': 'Start Date',
-    'ATD': 'End Date',
-    'Weight(Tons)': 'Weight Ton',
-    'Weight(Kg)': 'Activity Unit'
+    'Res_Date': 'Job Date',
+    'Facility': 'Consolidation Type',
+    'Departure': 'POL',
+    'Arrival': 'POD',
+    'Start Date': 'ATA',
+    'End Date': 'ATD',
+    'Weight Ton': 'Weight(Tons)',
+    'Activity Unit': 'Weight(Kg)'
 }
 
 # If the client file is uploaded, show options to select or modify the template mapping
@@ -66,16 +66,16 @@ if client_file:
     template_df = pd.read_excel(template_path, sheet_name=None)
     template_data = template_df['Import data file_Manufacturing']  # Assumes this is the relevant sheet
 
-    st.write("Select columns in the template to map from the client data (preset values provided):")
+    st.write("Select columns in the client data to map to the template columns (preset values provided):")
     
     # Allow the user to edit the mapping by using a selectbox for each template column
     column_mapping = {}
-    for client_col, preset_template_col in preset_column_mapping.items():
-        # Let user select from available template columns for each client column
-        column_mapping[client_col] = st.selectbox(
-            f"Select template column for client column '{client_col}'", 
-            template_data.columns, 
-            index=template_data.columns.get_loc(preset_template_col) if preset_template_col in template_data.columns else 0
+    for template_col, preset_client_col in preset_column_mapping.items():
+        # Let the user select from available client columns for each template column
+        column_mapping[template_col] = st.selectbox(
+            f"Select client column for template column '{template_col}'", 
+            client_data.columns, 
+            index=client_data.columns.get_loc(preset_client_col) if preset_client_col in client_data.columns else 0
         )
     
     st.write("Processing files...")
