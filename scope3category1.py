@@ -24,7 +24,7 @@ def process_files(client_file, template_path, column_mapping):
         if client_col in client_data.columns and template_col in template_data.columns:
             matched_data[template_col] = client_data[client_col]
 
-    # Format the 'Res_Date' column if 'Start Date' exists in the client data
+    # Format the 'Res_Date' column if 'Job Date' exists in the client data
     if 'Job Date' in client_data.columns:
         matched_data['Res_Date'] = pd.to_datetime(matched_data['Res_Date']).dt.date
 
@@ -44,38 +44,41 @@ client_file = st.file_uploader("Upload Client Workbook", type=['xls', 'xlsx'])
 # Define the path for the template file
 template_path = 'Freight-Sample_scope3.xlsx'
 
+# Preset column mapping (you can modify these as the default mappings)
+preset_column_mapping = {
+    'Job Date': 'Res_Date',
+    'Consolidation Type': 'Facility',
+    'POL': 'Departure',
+    'POD': 'Arrival',
+    'ATA': 'Start Date',
+    'ATD': 'End Date',
+    'Weight(Tons)': 'Weight Ton',
+    'Weight(Kg)': 'Activity Unit'
+}
+
+# If the client file is uploaded, show options to select or modify the mapping
 if client_file:
-    st.write("Processing files...")
-
-    # Read client data to get column names for dynamic mapping
+    # Load the client data to display options
     client_df = pd.read_excel(client_file, sheet_name=None)
-    client_data = list(client_df.values())[0]
-    client_columns = client_data.columns.tolist()
-
-    # Default column mapping dictionary (this can be customized by the user below)
-    default_mapping = {
-        'Job Date': 'Res_Date',
-        'Consolidation Type': 'Facility',
-        'POL': 'Departure',
-        'POD': 'Arrival',
-        'ATA': 'Start Date',
-        'ATD': 'End Date',
-        'Weight(Tons)': 'Weight Ton',
-        'Weight(Kg)': 'Activity Unit'
-    }
-
-    # Allow the user to map the columns dynamically
-    column_mapping = {}
-    st.write("Map the client columns to the template columns:")
-
-    for client_col, default_template_col in default_mapping.items():
-        template_col = st.selectbox(f"Map '{client_col}' to template column", client_columns, index=client_columns.index(default_template_col) if default_template_col in client_columns else 0)
-        column_mapping[client_col] = template_col
-
-    # Process the files with the custom column mapping
-    final_data = process_files(client_file, template_path, column_mapping)
+    client_data = list(client_df.values())[0]  # Get the first sheet's data
     
-    # Display the final data
+    st.write("Select columns for mapping (preset values provided):")
+    
+    # Allow the user to edit the mapping by using a selectbox for each column
+    column_mapping = {}
+    for client_col, template_col in preset_column_mapping.items():
+        column_mapping[client_col] = st.selectbox(
+            f"Select column for '{client_col}'", 
+            client_data.columns, 
+            index=client_data.columns.get_loc(client_col) if client_col in client_data.columns else 0
+        )
+    
+    st.write("Processing files...")
+    
+    # Process the files using the updated column mapping
+    final_data = process_files(client_file, template_path, column_mapping)
+
+    # Display the processed data
     st.write("Processed Data:")
     st.dataframe(final_data)
 
