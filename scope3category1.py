@@ -9,10 +9,18 @@ def process_files(client_file, template_path, column_mapping):
     client_df = pd.read_excel(client_file, sheet_name=None)
     client_data = list(client_df.values())[0]  # Assumes the first sheet is the relevant one
 
+    # Display the client data for debugging
+    st.write("Client Data Preview:")
+    st.dataframe(client_data.head())
+
     # Read the template workbook and specific sheet
     template_df = pd.read_excel(template_path, sheet_name=None)
     template_sheet_name = 'Import data file_Manufacturing'
     template_data = template_df[template_sheet_name]
+
+    # Display the template data for debugging
+    st.write("Template Data Preview:")
+    st.dataframe(template_data.head())
 
     # Preserve the first row (assuming it contains headers)
     preserved_header = template_data.iloc[:0, :]
@@ -23,13 +31,15 @@ def process_files(client_file, template_path, column_mapping):
     # Match and transfer data based on the column_mapping dictionary
     for client_col, template_col in column_mapping.items():
         if client_col in client_data.columns and template_col in template_data.columns:
+            st.write(f"Mapping client column '{client_col}' to template column '{template_col}'")
             matched_data[template_col] = client_data[client_col]
+        else:
+            st.write(f"Skipping mapping for '{client_col}' as it does not exist in the client data or template.")
 
     # Format the 'Res_Date' column if 'Job Date' exists in the client data
     if 'Job Date' in client_data.columns:
         matched_data['Res_Date'] = pd.to_datetime(matched_data['Res_Date']).dt.date
 
-    # Assign default values if the columns are missing
     matched_data['CF Standard'] = matched_data['CF Standard'].apply(lambda x: random.choice(['IATA']) if pd.isna(x) else x)
     matched_data['Gas'] = matched_data['Gas'].apply(lambda x: random.choice(['CO2']) if pd.isna(x) else x)
 
@@ -46,11 +56,13 @@ client_file = st.file_uploader("Upload Client Workbook", type=['xls', 'xlsx'])
 # Define the path for the template file
 template_path = 'Freight-Sample_scope3.xlsx'
 
-# Process if the file is uploaded
 if client_file:
     # Load client data to get the available columns
     client_df = pd.read_excel(client_file, sheet_name=None)
     client_data = list(client_df.values())[0]  # Assuming first sheet has the relevant data
+
+    # Display the available columns in the client data for debugging
+    st.write("Client Data Columns:", client_data.columns)
 
     # Define a default column mapping dictionary
     default_mapping = {
