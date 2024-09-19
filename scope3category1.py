@@ -3,19 +3,7 @@ import random
 import streamlit as st
 import io
 
-def process_files(client_file, template_path):
-    # Define a mapping dictionary to map client column names to template column names
-    column_mapping = {
-        'Job Date': 'Res_Date',
-        'Consolidation Type': 'Facility',
-        'POL': 'Departure',
-        'POD': 'Arrival',
-        'ATA': 'Start Date',
-        'ATD': 'End Date',
-        'Weight(Tons)': 'Weight Ton',
-        'Weight(Kg)': 'Activity Unit'
-    }
-
+def process_files(client_file, template_path, column_mapping):
     # Read the client sheet (assuming there's only one sheet in the client workbook)
     client_df = pd.read_excel(client_file, sheet_name=None)
     client_data = list(client_df.values())[0]  # Assumes the first sheet is the relevant one
@@ -58,7 +46,34 @@ template_path = 'Freight-Sample_scope3.xlsx'
 
 if client_file:
     st.write("Processing files...")
-    final_data = process_files(client_file, template_path)
+
+    # Read client data to get column names for dynamic mapping
+    client_df = pd.read_excel(client_file, sheet_name=None)
+    client_data = list(client_df.values())[0]
+    client_columns = client_data.columns.tolist()
+
+    # Default column mapping dictionary (this can be customized by the user below)
+    default_mapping = {
+        'Job Date': 'Res_Date',
+        'Consolidation Type': 'Facility',
+        'POL': 'Departure',
+        'POD': 'Arrival',
+        'ATA': 'Start Date',
+        'ATD': 'End Date',
+        'Weight(Tons)': 'Weight Ton',
+        'Weight(Kg)': 'Activity Unit'
+    }
+
+    # Allow the user to map the columns dynamically
+    column_mapping = {}
+    st.write("Map the client columns to the template columns:")
+
+    for client_col, default_template_col in default_mapping.items():
+        template_col = st.selectbox(f"Map '{client_col}' to template column", client_columns, index=client_columns.index(default_template_col) if default_template_col in client_columns else 0)
+        column_mapping[client_col] = template_col
+
+    # Process the files with the custom column mapping
+    final_data = process_files(client_file, template_path, column_mapping)
     
     # Display the final data
     st.write("Processed Data:")
