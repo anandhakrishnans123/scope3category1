@@ -56,21 +56,26 @@ preset_column_mapping = {
     'Weight(Kg)': 'Activity Unit'
 }
 
-# If the client file is uploaded, show options to select or modify the mapping
+# If the client file is uploaded, show options to select or modify the template mapping
 if client_file:
     # Load the client data to display options
     client_df = pd.read_excel(client_file, sheet_name=None)
     client_data = list(client_df.values())[0]  # Get the first sheet's data
+
+    # Load the template to get template column options
+    template_df = pd.read_excel(template_path, sheet_name=None)
+    template_data = template_df['Import data file_Manufacturing']  # Assumes this is the relevant sheet
+
+    st.write("Select columns in the template to map from the client data (preset values provided):")
     
-    st.write("Select columns for mapping (preset values provided):")
-    
-    # Allow the user to edit the mapping by using a selectbox for each column
+    # Allow the user to edit the mapping by using a selectbox for each template column
     column_mapping = {}
-    for client_col, template_col in preset_column_mapping.items():
+    for client_col, preset_template_col in preset_column_mapping.items():
+        # Let user select from available template columns for each client column
         column_mapping[client_col] = st.selectbox(
-            f"Select column for '{client_col}'", 
-            client_data.columns, 
-            index=client_data.columns.get_loc(client_col) if client_col in client_data.columns else 0
+            f"Select template column for client column '{client_col}'", 
+            template_data.columns, 
+            index=template_data.columns.get_loc(preset_template_col) if preset_template_col in template_data.columns else 0
         )
     
     st.write("Processing files...")
